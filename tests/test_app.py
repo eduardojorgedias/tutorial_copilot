@@ -8,19 +8,29 @@ client = TestClient(app)
 
 
 def test_unregister_participant_removes_email_from_activity():
+    # Arrange
     activity_name = "Chess Club"
     email = f"{uuid4()}@mergington.edu"
 
+    # Act
     signup_response = client.post(f"/activities/{activity_name}/signup?email={email}")
-    assert signup_response.status_code == 200
-
     delete_response = client.delete(f"/activities/{activity_name}/participants?email={email}")
-    assert delete_response.status_code == 200
+    activities_response = client.get("/activities")
 
-    activities = client.get("/activities").json()
+    # Assert
+    assert signup_response.status_code == 200
+    assert delete_response.status_code == 200
+    activities = activities_response.json()
     assert email not in activities[activity_name]["participants"]
 
 
 def test_unregister_participant_returns_404_for_missing_activity():
-    response = client.delete("/activities/Unknown Activity/participants?email=test@example.com")
+    # Arrange
+    path = "/activities/Unknown Activity/participants"
+    params = {"email": "test@example.com"}
+
+    # Act
+    response = client.delete(path, params=params)
+
+    # Assert
     assert response.status_code == 404
